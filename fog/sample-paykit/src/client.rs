@@ -29,7 +29,7 @@ use mc_crypto_rand::{CryptoRng, RngCore};
 use mc_fog_report_connection::GrpcFogReportConnection;
 use mc_fog_report_validation::{FogPubkeyResolver, FogResolver};
 use mc_transaction_core::{
-    constants::MINIMUM_FEE,
+    constants::MILLIMOB_TO_PICOMOB,
     onetime_keys::*,
     ring_signature::KeyImage,
     tx::{Tx, TxOut, TxOutMembershipProof},
@@ -42,6 +42,9 @@ use rand::Rng;
 /// Default number of blocks used for calculating transaction tombstone block
 /// number. See `new_tx_block_attempts` below.
 const DEFAULT_NEW_TX_BLOCK_ATTEMPTS: u16 = 50;
+
+/// The fee to use when the consensus network is unavailable.
+const FALLBACK_FEE: u64 = 10 * MILLIMOB_TO_PICOMOB;
 
 /// Represents the entire sample paykit object, capable of balance checks and
 /// sending transactions
@@ -289,7 +292,7 @@ impl Client {
         const TARGET_NUM_INPUTS: usize = 3;
         let inputs = self
             .tx_data
-            .get_transaction_inputs(amount + MINIMUM_FEE, TARGET_NUM_INPUTS)?;
+            .get_transaction_inputs(amount + FALLBACK_FEE, TARGET_NUM_INPUTS)?;
         let inputs: Vec<(OwnedTxOut, TxOutMembershipProof)> = self.get_proofs(&inputs)?;
         let rings: Vec<Vec<(TxOut, TxOutMembershipProof)>> = self.get_rings(inputs.len(), rng)?;
 
@@ -640,7 +643,7 @@ mod test_build_transaction_helper {
     use mc_common::logger::{test_with_logger, Logger};
     use mc_fog_report_validation::{FogPubkeyError, FullyValidatedFogPubkey};
     use mc_transaction_core::{
-        constants::MILLIMOB_TO_PICOMOB,
+        constants::{MILLIMOB_TO_PICOMOB, MINIMUM_FEE},
         tx::{TxOut, TxOutMembershipProof},
     };
     use mc_transaction_core_test_utils::get_outputs;

@@ -8,7 +8,7 @@ use fog_sample_paykit::{AccountKey, Client, ClientBuilder, TransactionStatus, Tx
 use mc_common::logger::{log, Logger};
 use mc_crypto_rand::McRng;
 use mc_transaction_core::{
-    constants::{MINIMUM_FEE, RING_SIZE},
+    constants::{MILLIMOB_TO_PICOMOB, RING_SIZE},
     BlockIndex,
 };
 use mc_util_uri::ConsensusClientUri;
@@ -17,6 +17,8 @@ use std::{
     thread,
     time::{Duration, Instant, SystemTime},
 };
+
+const FALLBACK_FEE: u64 = 10 * MILLIMOB_TO_PICOMOB;
 
 pub struct TestClient {
     consensus_wait: Duration,
@@ -121,7 +123,7 @@ impl TestClient {
         assert!(target_address.fog_report_url().is_some());
 
         // Get the current fee from consensus
-        let fee = source_client.get_fee().unwrap_or(MINIMUM_FEE);
+        let fee = source_client.get_fee().unwrap_or(FALLBACK_FEE);
 
         let transaction = source_client.build_transaction(
             self.transfer_amount,
@@ -290,7 +292,7 @@ impl TestClient {
             assert!(src_balance > 0);
             assert!(tgt_balance > 0);
 
-            let fee = source_client.get_fee().unwrap_or(MINIMUM_FEE);
+            let fee = source_client.get_fee().unwrap_or(FALLBACK_FEE);
             let transaction = self.transfer(source_client, target_client)?;
 
             // Wait for key images to land in ledger server
