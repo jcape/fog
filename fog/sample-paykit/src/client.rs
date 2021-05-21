@@ -487,7 +487,13 @@ impl Client {
 
     /// Retrieve the currently configured minimum fee from the consensus service
     pub fn get_fee(&mut self) -> Result<u64> {
-        Ok(self.consensus_service_conn.fetch_block_info()?.minimum_fee)
+        let mut minimum_fee = self.consensus_service_conn.fetch_block_info()?.minimum_fee;
+        // Compensate for protobuf defaulting this to zero
+        if minimum_fee == 0 {
+            minimum_fee = FALLBACK_FEE;
+        }
+
+        Ok(minimum_fee)
     }
 }
 
